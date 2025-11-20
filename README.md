@@ -20,3 +20,7 @@ Esta API es ideal para integrarse en sitios web o aplicaciones que necesiten un 
 - Archivos temporales eliminados automáticamente.
 
 ---
+## Archivo valido
+<img width="1403" height="196" alt="image" src="https://github.com/user-attachments/assets/4ee073f5-6e90-4c29-8a75-89b5cee0d9df" />
+
+
