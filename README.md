@@ -19,6 +19,8 @@
 ## Archivo valido
 <img width="1403" height="196" alt="image" src="https://github.com/user-attachments/assets/4ee073f5-6e90-4c29-8a75-89b5cee0d9df" />
 
+## Regisro de Archivos
+<img width="1406" height="257" alt="image" src="https://github.com/user-attachments/assets/91e5d5ef-aa22-4ea8-b7d7-ae2be7ffe82c" />
 
 
 
