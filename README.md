@@ -16,11 +16,8 @@
 - Archivos temporales eliminados automáticamente.
 
 ---
-## Archivo valido
-<img width="1403" height="196" alt="image" src="https://github.com/user-attachments/assets/4ee073f5-6e90-4c29-8a75-89b5cee0d9df" />
+## Demostraciòn funcionamiento - La api en este video esta siendo consumida desde una landing en modo local.
 
-## Regisro de Archivos
-<img width="1406" height="257" alt="image" src="https://github.com/user-attachments/assets/91e5d5ef-aa22-4ea8-b7d7-ae2be7ffe82c" />
-
+https://github.com/user-attachments/assets/8fda59c1-5f91-4fc9-b0d8-92b8e3752f47
 
 
