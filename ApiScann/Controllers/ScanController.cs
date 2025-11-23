@@ -1,5 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using ApiScann;
+﻿using ApiScann;
+using ApiScann.DTOs;
+using Microsoft.AspNetCore.Mvc;
 using System.Runtime.Intrinsics.Arm;
 using System.Security.Cryptography;
 
@@ -9,12 +10,20 @@ namespace ApiScann.Controllers
     [Route("api/[controller]")]
     public class ScanController : ControllerBase
     {
-        private readonly DefenderScanner _scanner = new DefenderScanner();
+        private readonly DefenderScanner _scanner;
+        private readonly AppDbContext _context;
 
-        [HttpPost("scan")]
+        public ScanController(DefenderScanner scanner, AppDbContext context)
+        {
+            _scanner = scanner;
+            _context = context;
+        }
+
+
+        [HttpPost]
         public async Task<IActionResult> ScanFile(IFormFile file)
         {
-            var allowedExtensions = new[] { ".pdf", ".docx", ".xlsx", ".zip", ".exe", };
+            var allowedExtensions = new[] {".pdf",".docx",".xlsx",".zip",".rar",".exe",".txt",".jpg",".png"};
 
             if (file == null || file.Length == 0)
                 return BadRequest("No se subió ningún archivo.");
@@ -32,7 +41,10 @@ namespace ApiScann.Controllers
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             "application/zip",
-            "application/x-msdownload"
+            "application/x-msdownload",
+            "application/x-rar-compressed",
+            "application/rar",
+            "text/plain"
             };
 
             if(!allowedMimeTypes.Contains(file.ContentType))
@@ -53,28 +65,73 @@ namespace ApiScann.Controllers
             
             // Crear archivo temporal
             var tempPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + extension);
-
-            using (var stream = System.IO.File.Create(tempPath))
+            try
             {
-                await file.CopyToAsync(stream);
-            }
+                using (var stream = System.IO.File.Create(tempPath))
+                {
+                    await file.CopyToAsync(stream);
+                }
 
-            string sha256Hash;
-            using (var sha = SHA256.Create())
-            using (var fileStream = System.IO.File.OpenRead(tempPath))
+                // Se obtiene el sha256 y se guarda
+                string sha256Hash;
+                using (var sha = SHA256.Create())
+                using (var fileStream = System.IO.File.OpenRead(tempPath))
+                {
+                    sha256Hash = BitConverter.ToString(sha.ComputeHash(fileStream)).Replace("-", "").ToLower();
+                }
+
+                // Escanear el archivo con el motor de Windows Defender
+                var result = await _scanner.ScanFile(tempPath);
+
+                result.SHA256 = sha256Hash;
+
+                return Ok(result);
+            }
+            catch (System.IO.IOException ex) when (ex.Message.Contains("virus") || ex.HResult == -2147024864)
             {
-                sha256Hash = BitConverter.ToString(sha.ComputeHash(fileStream)).Replace("-", "").ToLower();
+                string sha256Hash = "ANTIVIRUS_INTERCEPTED";
+
+                var logEntry = new ScanLog
+                {
+                    Id = Guid.NewGuid(),
+                    FileName = file.FileName,
+                    Sha256 = sha256Hash,
+                    MimeType = file.ContentType,
+                    DeclaredExtension = extension,
+                    Result = "Malicioso: Bloqueado por Antivirus del Sistema Operativo",
+                    FileSize = file.Length,
+                    ClientIp = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                    CreatedAt = DateTimeOffset.Now
+                };
+
+                _context.ScanLog.Add(logEntry);
+                await _context.SaveChangesAsync();
+
+                var blockedResult = new ParseDTO 
+                {
+                    malicious = true,
+                    threat = "Bloqueado por Antivirus del Sistema Operativo (IOException)",
+                    SHA256 = sha256Hash
+                };
+
+                return Ok(blockedResult);
             }
+            catch (Exception ex)
+            {
+                // Para otros errores no relacionados con el antivirus (ej. DB, Scanner)
+                // Puedes loguear el error aquí
+                Console.WriteLine(ex.ToString());
+                return StatusCode(500, "Ocurrió un error inesperado durante el procesamiento del archivo.");
+            }
+            finally
+            {
+                // Asegurar el borrado del archivo temporal
+                if (System.IO.File.Exists(tempPath))
+                {
+                    System.IO.File.Delete(tempPath);
+                }
 
-            // Escanear el archivo con el motor de Windows Defender
-            var result = await _scanner.ScanFile(tempPath);
-
-            result.SHA256 = sha256Hash;
-
-            // Borrar archivo temporal
-            System.IO.File.Delete(tempPath);
-
-            return Ok(result);
+            }
         }
     }
 }
