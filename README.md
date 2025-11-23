@@ -2,8 +2,6 @@
 
 **API-SecFiles** es una API REST desarrollada en C# (.NET 8) que permite escanear archivos subidos para detectar malware usando **Windows Defender**. Incluye validaciones de seguridad como extensión de archivo, MIME type, doble extensión y genera el **hash SHA256** del archivo para auditoría.
 
-Esta API es ideal para integrarse en sitios web o aplicaciones que necesiten un escaneo seguro de archivos antes de procesarlos.
-
 ---
 
 ##  Características
@@ -18,8 +16,8 @@ Esta API es ideal para integrarse en sitios web o aplicaciones que necesiten un 
 - Archivos temporales eliminados automáticamente.
 
 ---
-## Archivo valido
-<img width="1403" height="196" alt="image" src="https://github.com/user-attachments/assets/4ee073f5-6e90-4c29-8a75-89b5cee0d9df" />
+## Demostraciòn funcionamiento - La api en este video esta siendo consumida desde una landing en modo local.
 
+https://github.com/user-attachments/assets/8fda59c1-5f91-4fc9-b0d8-92b8e3752f47
 
 
